@@ -6,7 +6,7 @@ const app = express();
 // Google Cloud Storage configuration
 const storage = new Storage();
 // BUCKET_NAME will be set via environment variable or default to a name based on project
-const BUCKET_NAME = process.env.BUCKET_NAME || 'takuya-mapping-editor-storage';
+const BUCKET_NAME = process.env.BUCKET_NAME || 'sim-mapping-editor-data';
 const DATA_FILENAME = 'data.json';
 
 // 起動時にバケット名をログ出力
