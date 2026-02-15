@@ -1216,7 +1216,7 @@
                 imageData: document.getElementById('controllerImage').src,
                 nextBoxId,
                 colorHistory
-                // imageScaleは保存しない（端末ごとの表示設定とする）
+                // imageScaleは保存しない(端末ごとの表示設定とする)
             };
 
             try {
@@ -1225,11 +1225,26 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) alert(`Slot: ${slot}\nクラウドに保存しました！`);
-                else alert("保存に失敗しました...");
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    alert(`Slot: ${slot}\nクラウドに保存しました！`);
+                } else {
+                    // エラーの詳細を表示
+                    let errorMsg = `保存に失敗しました\n\n`;
+                    errorMsg += `エラー: ${result.error || '不明なエラー'}\n`;
+                    if (result.message) errorMsg += `詳細: ${result.message}\n`;
+                    if (result.code) errorMsg += `コード: ${result.code}\n`;
+                    if (result.bucket) errorMsg += `バケット: ${result.bucket}\n`;
+                    if (result.hint) errorMsg += `\n💡 ヒント:\n${result.hint}`;
+
+                    alert(errorMsg);
+                    console.error('Save error details:', result);
+                }
             } catch (e) {
-                console.error(e);
-                alert("エラーが発生しました");
+                console.error('Save exception:', e);
+                alert(`エラーが発生しました\n\n${e.message}\n\nブラウザのコンソールを確認してください。`);
             }
         }
 
@@ -1238,7 +1253,21 @@
             if (!confirm(`Slot: ${slot}\n現在のデータを上書きして読み込みますか？`)) return;
             try {
                 const res = await fetch(`/load?slot=${slot}`);
-                if (!res.ok) throw new Error("Load failed");
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    let errorMsg = `読み込みに失敗しました\n\n`;
+                    errorMsg += `エラー: ${errorData.error || '不明なエラー'}\n`;
+                    if (errorData.message) errorMsg += `詳細: ${errorData.message}\n`;
+                    if (errorData.code) errorMsg += `コード: ${errorData.code}\n`;
+                    if (errorData.bucket) errorMsg += `バケット: ${errorData.bucket}\n`;
+                    if (errorData.hint) errorMsg += `\n💡 ヒント:\n${errorData.hint}`;
+
+                    alert(errorMsg);
+                    console.error('Load error details:', errorData);
+                    return;
+                }
+
                 const data = await res.json();
 
                 // データ適用
@@ -1263,8 +1292,8 @@
 
                 alert(`Slot: ${slot}\n読み込みました！`);
             } catch (e) {
-                console.error(e);
-                alert("読み込みに失敗しました（データが無いなど）");
+                console.error('Load exception:', e);
+                alert(`読み込みに失敗しました\n\n${e.message}\n\nブラウザのコンソールを確認してください。`);
             }
         }
 
