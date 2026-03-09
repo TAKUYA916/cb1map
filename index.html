@@ -639,6 +639,7 @@
     </style>
 </head>
 <body>
+<div id="syncBadge" style="position:fixed;top:10px;right:10px;z-index:9999;background:rgba(20,20,30,0.85);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;pointer-events:none;">💾 ローカルのみ</div>
     <div class="container">
         <h1>🏎️ Sim Racing Keymap Editor</h1>
 
@@ -1205,96 +1206,198 @@
         window.addEventListener('resize', renderControlBoxes);
 
 
-        // ==================== CLOUD FUNCTIONS (UPDATED) ====================
+        // ==================== FIREBASE CONFIG ====================
+        const HARDCODED_FB_CONFIG = {
+            "apiKey": "AIzaSyCXFnleFlu9xDPN-0y-Y7a7sohbbY6mtTc",
+            "authDomain": "sim-mapping-editor-2bb89.firebaseapp.com",
+            "projectId": "sim-mapping-editor-2bb89",
+            "storageBucket": "sim-mapping-editor-2bb89.firebasestorage.app",
+            "messagingSenderId": "730903272198",
+            "appId": "1:730903272198:web:4c9689bb787e0750e15c87"
+        };
+
+        let fbApp = null, fbDb = null, fbMode = false;
+
+        async function loadFirebaseSDK() {
+            if (window.firebase) return;
+            const scripts = [
+                'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+                'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
+                'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
+            ];
+            for (const src of scripts) {
+                await new Promise((res, rej) => {
+                    const s = document.createElement('script');
+                    s.src = src; s.onload = res; s.onerror = rej;
+                    document.head.appendChild(s);
+                });
+            }
+        }
+
+        async function initFirebase(config) {
+            await loadFirebaseSDK();
+            if (!firebase.apps.length) {
+                fbApp = firebase.initializeApp(config);
+            } else {
+                fbApp = firebase.app();
+            }
+            fbDb = firebase.firestore();
+
+            // Googleログイン（初回のみポップアップ、以降は自動）
+            const auth = firebase.auth();
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+            const user = await new Promise(resolve => auth.onAuthStateChanged(resolve));
+            if (!user) {
+                setSyncBadge('loading');
+                await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+            }
+
+            fbMode = true;
+        }
+
+        // 起動時にFirebase自動接続
+        (async () => {
+            const config = HARDCODED_FB_CONFIG || (() => {
+                try { return JSON.parse(localStorage.getItem('sim_fb_config')); } catch { return null; }
+            })();
+            if (config) {
+                try {
+                    setSyncBadge('loading');
+                    await initFirebase(config);
+                    setSyncBadge('ok');
+
+                    // Firebaseにデータがなければ Cloud Run から移行
+                    const snap = await fbDb.collection('simapp').doc('slot1').get();
+                    if (!snap.exists || !snap.data().layers) {
+                        setSyncBadge('loading');
+                        try {
+                            const res = await fetch('https://sim-mapping-editor-353802372035.asia-northeast1.run.app/load?slot=slot1');
+                            const data = await res.json();
+                            if (data.layers) {
+                                data._savedAt = Date.now();
+                                await fbDb.collection('simapp').doc('slot1').set(data);
+                                console.log('Cloud Run → Firebase 移行完了');
+                            }
+                        } catch(e) {
+                            console.warn('Cloud Run移行失敗:', e);
+                        }
+                        setSyncBadge('ok');
+                    }
+
+                    // Firebaseから最新データを読み込み
+                    const snap2 = await fbDb.collection('simapp').doc('slot1').get();
+                    if (snap2.exists && snap2.data().layers) {
+                        const data = snap2.data();
+                        if (data.layers) layers = data.layers;
+                        if (data.controlBoxes) controlBoxes = data.controlBoxes;
+                        if (data.nextBoxId) nextBoxId = data.nextBoxId;
+                        if (data.colorHistory) colorHistory = data.colorHistory;
+                        renderLayerTabs();
+                        updateLayerBadge();
+                        renderControlBoxes();
+                        // imageDataがURLの場合は画像を自動読み込み
+                        if (data.imageData && data.imageData.startsWith('http')) {
+                            const img = document.getElementById('controllerImage');
+                            img.src = data.imageData;
+                            img.style.display = 'block';
+                            img.onload = () => renderControlBoxes();
+                        }
+                        console.log('Firebaseからデータを読み込みました');
+                    }
+
+                } catch(e) {
+                    console.error('Firebase自動接続失敗:', e);
+                    setSyncBadge('err');
+                }
+            } else {
+                setSyncBadge('none');
+            }
+        })();
+
+        function setSyncBadge(state) {
+            const badge = document.getElementById('syncBadge');
+            if (!badge) return;
+            const map = {
+                ok:      { text: '🔥 Firebase同期中', color: '#4CAF50' },
+                err:     { text: '⚠️ 未接続',         color: '#E05C5C' },
+                loading: { text: '⌛ 接続中...',       color: '#C8A96E' },
+                none:    { text: '💾 ローカルのみ',    color: '#666' },
+            };
+            const s = map[state] || map.none;
+            badge.textContent = s.text;
+            badge.style.color = s.color;
+        }
+
+        // ==================== CLOUD FUNCTIONS (Firebase版) ====================
         async function cloudSave() {
             const slot = document.getElementById('cloudSlot').value;
+            // 背景画像はFirestoreに保存しない（サイズ超過のため）
             const data = {
                 layers,
-                controlBoxes, // xPctなどが含まれるようになる
-                // imageData: document.getElementById('controllerImage').src, // データ量削減のため削除検討だが維持
-                // 画像データが巨大すぎるとエラーになる可能性があるが、現状維持
-                imageData: document.getElementById('controllerImage').src,
+                controlBoxes,
                 nextBoxId,
-                colorHistory
-                // imageScaleは保存しない(端末ごとの表示設定とする)
+                colorHistory,
+                _savedAt: Date.now()
             };
 
-            try {
-                const res = await fetch(`/save?slot=${slot}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await res.json();
-
-                if (res.ok) {
-                    alert(`Slot: ${slot}\nクラウドに保存しました！`);
-                } else {
-                    // エラーの詳細を表示
-                    let errorMsg = `保存に失敗しました\n\n`;
-                    errorMsg += `エラー: ${result.error || '不明なエラー'}\n`;
-                    if (result.message) errorMsg += `詳細: ${result.message}\n`;
-                    if (result.code) errorMsg += `コード: ${result.code}\n`;
-                    if (result.bucket) errorMsg += `バケット: ${result.bucket}\n`;
-                    if (result.hint) errorMsg += `\n💡 ヒント:\n${result.hint}`;
-
-                    alert(errorMsg);
-                    console.error('Save error details:', result);
+            if (fbMode && fbDb) {
+                try {
+                    setSyncBadge('loading');
+                    await fbDb.collection('simapp').doc(slot).set(data);
+                    setSyncBadge('ok');
+                    alert(`Slot: ${slot}\nFirebaseに保存しました！`);
+                } catch(e) {
+                    setSyncBadge('err');
+                    alert('保存に失敗しました: ' + e.message);
                 }
-            } catch (e) {
-                console.error('Save exception:', e);
-                alert(`エラーが発生しました\n\n${e.message}\n\nブラウザのコンソールを確認してください。`);
+            } else {
+                // ローカル保存
+                try {
+                    localStorage.setItem('sim_' + slot, JSON.stringify(data));
+                    alert(`Slot: ${slot}\nローカルに保存しました`);
+                } catch(e) {
+                    alert('保存失敗（容量不足）: ' + e.message);
+                }
             }
         }
 
         async function cloudLoad() {
             const slot = document.getElementById('cloudSlot').value;
             if (!confirm(`Slot: ${slot}\n現在のデータを上書きして読み込みますか？`)) return;
-            try {
-                const res = await fetch(`/load?slot=${slot}`);
 
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    let errorMsg = `読み込みに失敗しました\n\n`;
-                    errorMsg += `エラー: ${errorData.error || '不明なエラー'}\n`;
-                    if (errorData.message) errorMsg += `詳細: ${errorData.message}\n`;
-                    if (errorData.code) errorMsg += `コード: ${errorData.code}\n`;
-                    if (errorData.bucket) errorMsg += `バケット: ${errorData.bucket}\n`;
-                    if (errorData.hint) errorMsg += `\n💡 ヒント:\n${errorData.hint}`;
+            let data = null;
 
-                    alert(errorMsg);
-                    console.error('Load error details:', errorData);
+            if (fbMode && fbDb) {
+                try {
+                    setSyncBadge('loading');
+                    const snap = await fbDb.collection('simapp').doc(slot).get();
+                    setSyncBadge('ok');
+                    if (!snap.exists) { alert('データがありません'); return; }
+                    data = snap.data();
+                } catch(e) {
+                    setSyncBadge('err');
+                    alert('読み込みに失敗しました: ' + e.message);
                     return;
                 }
-
-                const data = await res.json();
-
-                // データ適用
-                if (data.layers) layers = data.layers;
-                if (data.controlBoxes) controlBoxes = data.controlBoxes;
-                if (data.nextBoxId) nextBoxId = data.nextBoxId;
-                if (data.colorHistory) colorHistory = data.colorHistory;
-                if (data.imageData) {
-                     const img = document.getElementById('controllerImage');
-                     img.onload = () => {
-                         // 画像読み込み完了後に再描画しないとサイズ計算狂う
-                         renderControlBoxes();
-                     };
-                     img.src = data.imageData;
-                     img.style.display = 'block';
-                }
-
-                currentLayer = 0;
-                renderLayerTabs();
-                updateLayerBadge();
-                renderControlBoxes();
-
-                alert(`Slot: ${slot}\n読み込みました！`);
-            } catch (e) {
-                console.error('Load exception:', e);
-                alert(`読み込みに失敗しました\n\n${e.message}\n\nブラウザのコンソールを確認してください。`);
+            } else {
+                const s = localStorage.getItem('sim_' + slot);
+                if (!s) { alert('データがありません'); return; }
+                data = JSON.parse(s);
             }
+
+            // データ適用
+            if (data.layers) layers = data.layers;
+            if (data.controlBoxes) controlBoxes = data.controlBoxes;
+            if (data.nextBoxId) nextBoxId = data.nextBoxId;
+            if (data.colorHistory) colorHistory = data.colorHistory;
+            // ※ 背景画像は保存していないので手動で再読み込みが必要
+
+            currentLayer = 0;
+            renderLayerTabs();
+            updateLayerBadge();
+            renderControlBoxes();
+
+            alert(`Slot: ${slot}\n読み込みました！\n※背景画像は手動で再読み込みしてください`);
         }
 
         // ==================== IMAGE EXPORT ====================
