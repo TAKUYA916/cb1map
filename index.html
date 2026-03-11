@@ -16,30 +16,160 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             color: #fff;
-            padding: 20px;
+            padding: 10px 16px;
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
             position: relative;
         }
 
+        /* タイトル行：タイトル左寄せ＋保存エリア右側 */
+        .title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            gap: 16px;
+        }
+
         h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2em;
+            margin: 0;
+            font-size: 1.4em;
             background: linear-gradient(90deg, #ff4444, #ff8800);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            white-space: nowrap;
+        }
+
+        /* 保存エリア（タイトル横） */
+        .save-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 8px 14px;
+        }
+
+        .save-bar select {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: #fff;
+            font-size: 0.85em;
+        }
+
+        .save-bar .btn {
+            padding: 6px 14px;
+            font-size: 0.82em;
+        }
+
+        /* PC時：メインエリア横並び */
+        @media (min-width: 900px) {
+            .main-layout {
+                display: grid;
+                grid-template-columns: 1fr 380px;
+                gap: 16px;
+                align-items: start;
+            }
+            .editor-panel-sidebar {
+                display: flex !important;
+                flex-direction: column;
+                gap: 12px;
+                position: sticky;
+                top: 8px;
+                max-height: calc(100vh - 16px);
+                overflow-y: auto;
+            }
+            /* PC時はモバイル用エディターパネル非表示 */
+            .editor-panel {
+                display: none !important;
+            }
+            /* タイトルバーの保存バー：PC時は簡略 */
+            .save-bar .save-btn-only { display: inline-flex; }
+        }
+
+        @media (max-width: 899px) {
+            .main-layout {
+                display: block;
+            }
+            .editor-panel-sidebar {
+                display: none !important;
+            }
+            .editor-panel.visible {
+                display: grid !important;
+            }
+            .save-bar .save-btn-only { display: inline-flex; }
+        }
+
+        /* 保存ドロワー */
+        .save-drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 8000;
+            backdrop-filter: blur(3px);
+        }
+        .save-drawer-overlay.open { display: flex; align-items: center; justify-content: center; }
+        .save-drawer {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid rgba(255,136,0,0.3);
+            border-radius: 16px;
+            padding: 24px;
+            width: 340px;
+            max-width: 95vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .save-drawer h3 {
+            color: #ff8800;
+            margin-bottom: 18px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .save-drawer .close-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.4em;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .save-drawer .close-btn:hover { color: #fff; }
+        .save-drawer select {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #fff;
+            font-size: 0.95em;
+            margin-bottom: 14px;
+        }
+        .save-drawer .drawer-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .save-drawer .drawer-actions .btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
         }
 
         .panel {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
@@ -59,13 +189,13 @@
         /* レイヤータブ */
         .layer-tabs {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             flex-wrap: wrap;
-            margin-bottom: 15px;
+            margin-bottom: 0;
         }
 
         .layer-tab {
-            padding: 10px 20px;
+            padding: 6px 14px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             border-radius: 8px;
@@ -74,7 +204,8 @@
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            font-size: 0.9em;
         }
 
         .layer-tab:hover {
@@ -121,41 +252,34 @@
         }
 
         .add-layer-btn {
-            padding: 10px 20px;
+            padding: 6px 14px;
             background: rgba(255, 136, 0, 0.2);
             border: 2px dashed #ff8800;
             border-radius: 8px;
             color: #ff8800;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 0.9em;
         }
 
         .add-layer-btn:hover {
             background: rgba(255, 136, 0, 0.3);
         }
 
-        /* レイアウトエリア */
-        .layout-wrapper {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 500px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            overflow: auto;
-        }
+        /* layout-wrapper は後の定義で上書き */
 
         .layout-container {
             position: relative;
             display: inline-block;
             margin: 0 auto;
+            /* ズームはwidthで制御 */
+            width: var(--zoom-width, 100%);
+            max-width: 100%;
         }
 
         #controllerImage {
             display: block;
-            max-width: 100%;
+            width: 100%;
             height: auto;
             user-select: none;
             pointer-events: none;
@@ -203,15 +327,17 @@
         }
 
         .layout-wrapper {
-            position: -webkit-sticky;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            position: relative;
             width: 100%;
             display: flex;
             justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            overflow: auto;
+            /* Full HDで収まるよう高さ制限 */
+            max-height: calc(100vh - 220px);
             box-sizing: border-box;
-            background: rgba(0, 0, 0, 0.3); /* Ensure consistency */
         }
 
         .editor-panel {
@@ -250,7 +376,7 @@
             border-style: dashed;
         }
 
-        /* エディターパネル */
+        /* エディターパネル（モバイル：ボタン選択時に下に表示） */
         .editor-panel {
             display: none;
             width: 100%;
@@ -262,6 +388,25 @@
 
         .editor-panel.visible {
             display: grid;
+        }
+
+        /* サイドバー（PC常時表示） */
+        .editor-panel-sidebar {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .editor-panel-sidebar .editor-section {
+            background: rgba(0,0,0,0.2);
+            padding: 14px;
+            border-radius: 8px;
+        }
+
+        .editor-panel-sidebar .editor-section h3 {
+            color: #ff8800;
+            margin-bottom: 10px;
+            font-size: 0.95em;
         }
 
         .editor-section {
@@ -641,59 +786,79 @@
 <body>
 <div id="syncBadge" style="position:fixed;top:10px;right:10px;z-index:9999;background:rgba(20,20,30,0.85);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;pointer-events:none;">💾 ローカルのみ</div>
     <div class="container">
-        <h1>🏎️ Sim Racing Keymap Editor</h1>
-
-        <!-- レイヤー管理 -->
-        <div class="panel">
-            <div class="panel-title">
-                <div>📂 レイヤー</div>
-                <div style="font-size: 0.9em; color: #888;">
-                    レイヤー数: <span id="layerCount" style="color: #ff8800; font-weight: bold; font-size: 1.1em;">0</span>
-                </div>
-            </div>
-            <div class="layer-tabs" id="layerTabs">
-                <button class="add-layer-btn" onclick="addLayer()">+ レイヤー追加</button>
+        <!-- タイトル行 -->
+        <div class="title-bar">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <h1>🏎️ Sim Racing Keymap Editor</h1>
+                <button class="btn btn-small" style="background:linear-gradient(135deg,#ff4444,#ff8800);white-space:nowrap;" onclick="openSaveDrawer()">💾 保存 / 読込</button>
+                <button class="btn btn-secondary btn-small" onclick="exportAsImage()">🖼️ 書き出し</button>
+                <button class="btn btn-danger btn-small" onclick="clearAll()" style="padding:6px 10px;">🗑️</button>
             </div>
         </div>
 
-        <!-- レイアウトエリア -->
-        <!-- レイアウトエリア -->
-        <div class="panel sticky-layout-panel">
-            <div class="panel-title">🎮 レイアウト</div>
-
-            <div class="toolbar">
-                <label for="imageUpload" class="btn btn-small">
-                    📷 画像を読み込む
-                </label>
-                <input type="file" id="imageUpload" accept="image/*" onchange="loadImage(event)">
-
-                <div class="zoom-controls">
-                    <button class="zoom-btn" onclick="zoomOut()">−</button>
-                    <span id="zoomLevel">100%</span>
-                    <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <!-- 保存ドロワー -->
+        <div class="save-drawer-overlay" id="saveDrawerOverlay" onclick="closeSaveDrawerOnBg(event)">
+            <div class="save-drawer">
+                <h3>💾 保存 / 読込
+                    <button class="close-btn" onclick="closeSaveDrawer()">✕</button>
+                </h3>
+                <select id="cloudSlot">
+                    <option value="slot1">PXN_CB1</option>
+                    <option value="slot2">GTNeo</option>
+                    <option value="slot3">Slot 3</option>
+                    <option value="slot4">Slot 4</option>
+                    <option value="slot5">Slot 5</option>
+                </select>
+                <div class="drawer-actions">
+                    <button class="btn" style="background:linear-gradient(135deg,#ff4444,#ff8800);" onclick="cloudSave()">💾 Firebaseに保存</button>
+                    <button class="btn btn-secondary" onclick="cloudLoad()">📂 Firebaseから読込</button>
+                    <button class="btn btn-secondary" onclick="exportAsImage();closeSaveDrawer()">🖼️ 画像として書き出し</button>
                 </div>
-
-                <button class="btn btn-small" onclick="addControlBox()">+ ボタン追加</button>
-                <button class="btn btn-small btn-secondary" onclick="deleteSelectedBox()">🗑️ 削除</button>
-            </div>
-
-            <div class="image-select" id="imageSelect" style="display: none;">
-                <div style="width: 100%; color: #aaa; font-size: 0.9em;">同じ階層の画像ファイル:</div>
             </div>
         </div>
 
-        <!-- Sticky Image Wrapper -->
-        <div class="layout-wrapper">
-                <div class="layout-container" id="layoutContainer">
-                    <img id="controllerImage" src="" alt="コントローラー画像を読み込んでください" style="display: none;">
-                    <div id="controlBoxes"></div>
+        <!-- メインエリア（PC:2カラム） -->
+        <div class="main-layout">
+            <!-- 左：レイアウト＋レイヤー -->
+            <div>
+                <!-- レイアウトツールバー（全幅） -->
+                <div class="panel" style="margin-bottom:8px;padding:10px 14px;">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span style="color:#ff8800;font-weight:bold;white-space:nowrap;">🎮 レイアウト</span>
+                        <label for="imageUpload" class="btn btn-small" style="cursor:pointer;">📷 画像を読み込む</label>
+                        <input type="file" id="imageUpload" accept="image/*" onchange="loadImage(event)" style="display:none;">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoomOut()">−</button>
+                            <span id="zoomLevel">100%</span>
+                            <button class="zoom-btn" onclick="zoomIn()">+</button>
+                        </div>
+                        <button class="btn btn-small" onclick="addControlBox()">+ ボタン追加</button>
+                        <button class="btn btn-small btn-secondary" onclick="deleteSelectedBox()">🗑️ 削除</button>
+                        <div style="flex:1;"></div>
+                        <div class="image-select" id="imageSelect" style="display:none;margin:0;"></div>
+                    </div>
                 </div>
 
+                <div class="layout-wrapper">
+                    <div class="layout-container" id="layoutContainer">
+                        <img id="controllerImage" src="" alt="コントローラー画像を読み込んでください" style="display: none;">
+                        <div id="controlBoxes"></div>
+                    </div>
+                </div>
 
-        </div>
+                <!-- レイヤー管理（レイアウトの下、全幅・1行） -->
+                <div class="panel" style="margin-top:8px;margin-bottom:0;padding:8px 14px;">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span style="color:#ff8800;font-weight:bold;white-space:nowrap;">📂 レイヤー</span>
+                        <span style="font-size:0.8em;color:#888;white-space:nowrap;">(<span id="layerCount" style="color:#ff8800;font-weight:bold;">0</span>)</span>
+                        <div class="layer-tabs" id="layerTabs" style="margin:0;flex:1;flex-wrap:wrap;">
+                            <button class="add-layer-btn" onclick="addLayer()">+ レイヤー追加</button>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- エディターパネル -->
-        <div class="panel editor-panel" id="editorPanel">
+                <!-- モバイル用エディターパネル（ボタン選択時に表示） -->
+                <div class="panel editor-panel" id="editorPanel">
             <div class="editor-section">
                 <h3>🔧 ボタン設定 <span id="selectedBoxId" style="font-size: 0.9em; color: #aaa;"></span></h3>
 
@@ -961,47 +1126,111 @@
                     <button class="keycode-btn" data-kc="`">`</button>
                 </div>
             </div>
-        </div>
+                </div>
+            </div><!-- /左カラム -->
 
-        <!-- 設定パネル -->
-        <div class="panel">
-            <div class="panel-title">💾 保存 / 読込 / エクスポート</div>
-
-            <div style="margin-bottom: 20px;">
-                <div style="margin-bottom: 15px; padding: 10px; background: rgba(0, 180, 219, 0.1); border-left: 3px solid #00b4db; border-radius: 4px; font-size: 0.9em;">
-                    <strong>全端末共通サーバー保存</strong><br>
-                    選択したスロットのデータはクラウド(Google Cloud Storage)に保存され、iPhone/PCどちらからでも同じ状態を読み込めます。
+            <!-- 右：サイドバー（PC常時表示） -->
+            <div class="editor-panel-sidebar" id="editorSidebar">
+                <!-- ボタン設定 -->
+                <div class="panel editor-section" style="margin-bottom:0;">
+                    <h3 style="margin-bottom:8px;">🔧 ボタン設定 <span id="selectedBoxIdSide" style="font-size:0.85em;color:#aaa;"></span></h3>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">キーコード</label>
+                            <input type="text" id="keycodeInputSide" placeholder="例: A" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" oninput="updateKeycode(this.value); document.getElementById('keycodeInput').value=this.value;">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">X位置 (px)</label>
+                            <input type="number" id="boxXSide" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" oninput="document.getElementById('boxX').value=this.value;updateBoxPosition();">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">Y位置 (px)</label>
+                            <input type="number" id="boxYSide" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" oninput="document.getElementById('boxY').value=this.value;updateBoxPosition();">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">幅 (px)</label>
+                            <input type="number" id="boxWidthSide" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" oninput="document.getElementById('boxWidth').value=this.value;updateBoxSize();">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">高さ (px)</label>
+                            <input type="number" id="boxHeightSide" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" oninput="document.getElementById('boxHeight').value=this.value;updateBoxSize();">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">形状</label>
+                            <select id="boxShapeSide" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" onchange="document.getElementById('boxShape').value=this.value;updateBoxStyle();">
+                                <option value="rectangle">四角</option>
+                                <option value="circle">丸</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">フォント</label>
+                            <select id="boxFontSide" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" onchange="document.getElementById('boxFont').value=this.value;updateBoxStyle();">
+                                <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                                <option value="'Meiryo', sans-serif">メイリオ</option>
+                                <option value="'MS PGothic', 'MS Gothic', sans-serif">ＭＳ ゴシック</option>
+                                <option value="'Yu Gothic', sans-serif">游ゴシック</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Courier New', monospace">Courier New</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;font-size:0.85em;color:#aaa;min-width:80px;">文字サイズ</label>
+                            <input type="number" id="boxFontSizeSide" value="14" min="1" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;color:#fff;font-size:0.9em;" oninput="document.getElementById('boxFontSize').value=this.value;updateBoxStyle();">
+                        </div>
+                    </div>
                 </div>
 
-                <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9em;">
-                        保存スロット選択:
-                    </label>
-                    <select id="cloudSlot" style="width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 8px; color: #fff;">
-                        <option value="slot1">PXN_CB1</option>
-                        <option value="slot2">GTNeo</option>
-                        <option value="slot3">Slot 3 </option>
-                        <option value="slot4">Slot 4 </option>
-                        <option value="slot5">Slot 5 </option>
-                    </select>
+                <!-- カラー設定（コンパクト） -->
+                <div class="panel editor-section" style="margin-bottom:0;">
+                    <h3 style="margin-bottom:8px;">🎨 カラー設定</h3>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <!-- 背景色 -->
+                        <div>
+                            <div style="font-size:0.78em;color:#aaa;margin-bottom:3px;">背景色</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <input type="color" id="boxBgColorSide" value="#ff8800" style="width:32px;height:28px;border:none;border-radius:4px;cursor:pointer;flex-shrink:0;" oninput="document.getElementById('boxBgColor').value=this.value;document.getElementById('boxBgColorText').value=this.value;updateBoxColor();">
+                                <input type="text" id="boxBgColorTextSide" value="#ff8800" style="width:72px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:3px 6px;color:#fff;font-size:0.8em;font-family:monospace;" oninput="document.getElementById('boxBgColorText').value=this.value;updateBoxColorFromText('bg');">
+                                <div id="bgColorPaletteSide" style="display:flex;gap:3px;flex-wrap:wrap;flex:1;"></div>
+                            </div>
+                        </div>
+                        <!-- テキスト色 -->
+                        <div>
+                            <div style="font-size:0.78em;color:#aaa;margin-bottom:3px;">テキスト色</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <input type="color" id="boxTextColorSide" value="#ffffff" style="width:32px;height:28px;border:none;border-radius:4px;cursor:pointer;flex-shrink:0;" oninput="document.getElementById('boxTextColor').value=this.value;document.getElementById('boxTextColorText').value=this.value;updateBoxColor();">
+                                <input type="text" id="boxTextColorTextSide" value="#ffffff" style="width:72px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:3px 6px;color:#fff;font-size:0.8em;font-family:monospace;" oninput="document.getElementById('boxTextColorText').value=this.value;updateBoxColorFromText('text');">
+                                <div id="textColorPaletteSide" style="display:flex;gap:3px;flex-wrap:wrap;flex:1;"></div>
+                            </div>
+                        </div>
+                        <!-- ボーダー色 -->
+                        <div>
+                            <div style="font-size:0.78em;color:#aaa;margin-bottom:3px;">ボーダー色</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <input type="color" id="boxBorderColorSide" value="#ff8800" style="width:32px;height:28px;border:none;border-radius:4px;cursor:pointer;flex-shrink:0;" oninput="document.getElementById('boxBorderColor').value=this.value;document.getElementById('boxBorderColorText').value=this.value;updateBoxColor();">
+                                <input type="text" id="boxBorderColorTextSide" value="#ff8800" style="width:72px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:3px 6px;color:#fff;font-size:0.8em;font-family:monospace;" oninput="document.getElementById('boxBorderColorText').value=this.value;updateBoxColorFromText('border');">
+                                <div id="borderColorPaletteSide" style="display:flex;gap:3px;flex-wrap:wrap;flex:1;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="actions">
-                    <button class="btn" style="background: linear-gradient(135deg, #00b4db, #0083b0);" onclick="cloudSave()">☁️ クラウドに保存</button>
-                    <button class="btn btn-secondary" onclick="cloudLoad()">☁️ クラウドから読込</button>
-                    <button class="btn btn-secondary" onclick="exportAsImage()">🖼️ 画像として保存 (.png)</button>
+
+                <!-- キーコード選択 -->
+                <div class="panel editor-section" style="margin-bottom:0;">
+                    <h3>⌨️ キーコード選択</h3>
+                    <div class="keycode-categories" id="sideKeycodeCategories">
+                        <button class="category-btn active" onclick="showCategorySide('basic')">基本</button>
+                        <button class="category-btn" onclick="showCategorySide('mod')">修飾</button>
+                        <button class="category-btn" onclick="showCategorySide('layer')">レイヤー</button>
+                        <button class="category-btn" onclick="showCategorySide('media')">メディア</button>
+                        <button class="category-btn" onclick="showCategorySide('function')">Fn</button>
+                        <button class="category-btn" onclick="showCategorySide('racing')">レーシング</button>
+                        <button class="category-btn" onclick="showCategorySide('special')">特殊</button>
+                    </div>
+                    <div id="sideKeycodeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;max-height:300px;overflow-y:auto;"></div>
                 </div>
             </div>
-
-            <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-
-            <div>
-                <h4 style="color: #ff8800; margin-bottom: 10px;">その他</h4>
-                <div class="actions">
-                    <button class="btn btn-danger" onclick="clearAll()">🗑️ 全クリア</button>
-                </div>
-            </div>
-        </div>
-    </div>
+        </div><!-- /main-layout -->
+    </div><!-- /container -->
 
     <script>
         // ==================== RESPONSIVE COORDINATE HELPERS ====================
@@ -1073,13 +1302,18 @@
                 const keycode = currentLayerData.boxes[box.id] || '';
                 el.textContent = keycode || `BTN${box.id}`;
 
-                // %配置 (中心基準 transform: translate(-50%, -50%) がCSSにある前提)
+                // %配置（左上基準）
                 el.style.left = box.xPct + '%';
                 el.style.top = box.yPct + '%';
 
-                // サイズスケーリング
-                el.style.width = (box.width * responsiveScale) + 'px';
-                el.style.height = (box.height * responsiveScale) + 'px';
+                // サイズ：widthPct/heightPctがあれば%で、なければresponsiveScaleでpx
+                if (box.widthPct !== undefined && box.heightPct !== undefined) {
+                    el.style.width = box.widthPct + '%';
+                    el.style.height = box.heightPct + '%';
+                } else {
+                    el.style.width = (box.width * responsiveScale) + 'px';
+                    el.style.height = (box.height * responsiveScale) + 'px';
+                }
                 el.style.fontSize = (box.fontSize * responsiveScale) + 'px';
                 el.style.fontFamily = box.fontFamily || "'Segoe UI', sans-serif";
                 el.style.background = box.bgColor || '#ff8800';
@@ -1345,7 +1579,8 @@
                     setSyncBadge('loading');
                     await fbDb.collection('simapp').doc(slot).set(data);
                     setSyncBadge('ok');
-                    alert(`Slot: ${slot}\nFirebaseに保存しました！`);
+                    alert(`💾 "${slot}" を保存しました`);
+                    closeSaveDrawer();
                 } catch(e) {
                     setSyncBadge('err');
                     alert('保存に失敗しました: ' + e.message);
@@ -1397,7 +1632,19 @@
             updateLayerBadge();
             renderControlBoxes();
 
-            alert(`Slot: ${slot}\n読み込みました！\n※背景画像は手動で再読み込みしてください`);
+            alert(`📂 "${slot}" を読み込みました\n※背景画像は手動で選択してください`);
+            closeSaveDrawer();
+        }
+
+        // ==================== SAVE DRAWER ====================
+        function openSaveDrawer() {
+            document.getElementById('saveDrawerOverlay').classList.add('open');
+        }
+        function closeSaveDrawer() {
+            document.getElementById('saveDrawerOverlay').classList.remove('open');
+        }
+        function closeSaveDrawerOnBg(e) {
+            if (e.target === document.getElementById('saveDrawerOverlay')) closeSaveDrawer();
         }
 
         // ==================== IMAGE EXPORT ====================
@@ -1531,7 +1778,8 @@
              try {
                  const pngFiles = ['controller1.png', 'controller2.png', 'buttonbox.png', 'wheel.png', 'gtneo.png', 'pxn_cb1.png'];
                  const imageSelect = document.getElementById('imageSelect');
-                 imageSelect.innerHTML = '<div style="width: 100%; color: #aaa; font-size: 0.9em;">同じ階層の画像ファイル:</div>';
+                 imageSelect.innerHTML = '';
+                 imageSelect.style.display = 'none';
                  for (const filename of pngFiles) {
                      const img = new Image();
                      img.src = filename;
@@ -1563,10 +1811,12 @@
         function zoomIn() { imageScale = Math.min(imageScale + 0.1, 3.0); updateImageScale(); }
         function zoomOut() { imageScale = Math.max(imageScale - 0.1, 0.3); updateImageScale(); }
         function updateImageScale() {
-             const img = document.getElementById('controllerImage');
-             img.style.transform = `scale(${imageScale})`;
-             document.getElementById('zoomLevel').textContent = Math.round(imageScale * 100) + '%';
-             // renderControlBoxes(); // 変更: renderControlBoxesはscaleに依存しない(px位置計算のみscale依存だったが、%化で不要？ いや、scaleはtransformなのでレイアウトコンテナのサイズは変えない)
+            const container = document.getElementById('layoutContainer');
+            // widthを変えることで画像サイズが変わり、ボタンのresponsiveScaleも連動する
+            container.style.width = Math.round(imageScale * 100) + '%';
+            document.getElementById('zoomLevel').textContent = Math.round(imageScale * 100) + '%';
+            // レイアウト反映後に再描画（requestAnimationFrameでDOMサイズ確定後に実行）
+            requestAnimationFrame(() => renderControlBoxes());
         }
 
         // ==================== SELECTION & UPDATE ====================
@@ -1618,6 +1868,9 @@
             document.getElementById('boxBgColorText').value = box.bgColor || '#ff8800';
             document.getElementById('boxTextColor').value = box.textColor || '#ffffff';
             document.getElementById('boxTextColorText').value = box.textColor || '#ffffff';
+
+            // サイドバーにも同期
+            syncSidebarFields(box, keycode);
             document.getElementById('boxBorderColor').value = box.borderColor || '#ff8800';
             document.getElementById('boxBorderColorText').value = box.borderColor || '#ff8800';
             document.getElementById('editorPanel').classList.add('visible');
@@ -1875,7 +2128,86 @@
             a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
         }
 
-        renderLayerTabs(); updateLayerBadge(); loadLocalPngImages(); renderColorPalette();
+        // ==================== SIDEBAR SYNC FUNCTIONS ====================
+        const KEYCODE_SETS = {
+            basic: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9','Space','Enter','Tab','Esc'],
+            mod: ['Ctrl','Alt','Shift','Win','Ctrl+Z','Ctrl+X','Ctrl+C','Ctrl+V'],
+            layer: ['MO(1)','MO(2)','TO(0)','TO(1)','TG(1)','TRNS','SKIP','OFF','ON'],
+            media: ['Play','Pause','Stop','Next','Prev','VolUp','VolDn','Mute'],
+            function: ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','Home','End','PgUp','PgDn','↑','↓','←','→'],
+            racing: ['ABS+','ABS-','TC+','TC-','BB+','BB-','ENG+','ENG-','FUEL+','FUEL-','DRS','PIT','RADIO','LIGHTS','WIPER','CAM','LOOK_L','LOOK_R','LOOK_B','MAP'],
+            special: ['Del','Ins','BkSp','PrtSc','-','=','[',']',';',"'",'.',',','/','\'','`','ペダル']
+        };
+
+        let currentSideCategory = 'basic';
+
+        function showCategorySide(cat) {
+            currentSideCategory = cat;
+            document.querySelectorAll('#sideKeycodeCategories .category-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderSideKeycodes(cat);
+        }
+
+        function renderSideKeycodes(cat) {
+            const grid = document.getElementById('sideKeycodeGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            (KEYCODE_SETS[cat] || []).forEach(kc => {
+                const btn = document.createElement('button');
+                btn.className = 'keycode-btn';
+                btn.textContent = kc;
+                btn.onclick = () => {
+                    document.getElementById('keycodeInputSide').value = kc;
+                    document.getElementById('keycodeInput').value = kc;
+                    updateKeycode(kc);
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function syncSidebarFields(box, keycode) {
+            const s = (id, v) => { const el = document.getElementById(id); if(el) el.value = v; };
+            s('keycodeInputSide', keycode);
+            s('selectedBoxIdSide', `(Button ${box.id})`);
+            const img = document.getElementById('controllerImage');
+            const w = img.clientWidth, h = img.clientHeight;
+            s('boxXSide', Math.round((box.xPct/100)*w));
+            s('boxYSide', Math.round((box.yPct/100)*h));
+            s('boxWidthSide', box.width);
+            s('boxHeightSide', box.height);
+            s('boxFontSizeSide', box.fontSize);
+            s('boxShapeSide', box.shape || 'rectangle');
+            s('boxFontSide', box.fontFamily || "'Segoe UI', sans-serif");
+            s('boxBgColorSide', box.bgColor || '#ff8800');
+            s('boxBgColorTextSide', box.bgColor || '#ff8800');
+            s('boxTextColorSide', box.textColor || '#ffffff');
+            s('boxTextColorTextSide', box.textColor || '#ffffff');
+            s('boxBorderColorSide', box.borderColor || '#ff8800');
+            s('boxBorderColorTextSide', box.borderColor || '#ff8800');
+        }
+
+        function renderColorPaletteSide() {
+            ['bgColorPaletteSide','textColorPaletteSide','borderColorPaletteSide'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = '';
+                colorHistory.forEach(color => {
+                    const d = document.createElement('div');
+                    d.className = 'palette-color';
+                    d.style.background = color;
+                    d.title = color;
+                    d.onclick = () => {
+                        if (id.includes('bg')) { document.getElementById('boxBgColor').value=color; document.getElementById('boxBgColorText').value=color; document.getElementById('boxBgColorSide').value=color; document.getElementById('boxBgColorTextSide').value=color; }
+                        else if (id.includes('text')) { document.getElementById('boxTextColor').value=color; document.getElementById('boxTextColorText').value=color; document.getElementById('boxTextColorSide').value=color; document.getElementById('boxTextColorTextSide').value=color; }
+                        else { document.getElementById('boxBorderColor').value=color; document.getElementById('boxBorderColorText').value=color; document.getElementById('boxBorderColorSide').value=color; document.getElementById('boxBorderColorTextSide').value=color; }
+                        updateBoxColor();
+                    };
+                    el.appendChild(d);
+                });
+            });
+        }
+
+        renderLayerTabs(); updateLayerBadge(); loadLocalPngImages(); renderColorPalette(); renderSideKeycodes('basic');
 
         document.getElementById('layoutContainer').addEventListener('pointerdown', (e) => {
              if (e.target.closest('.control-box')) return;
